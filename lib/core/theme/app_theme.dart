@@ -13,7 +13,7 @@ class AppTheme {
       primaryColor: AppColors.darkPrimary,
       colorScheme: const ColorScheme.dark(
         primary: AppColors.darkPrimary,
-        secondary: AppColors.primaryPink,
+        secondary: AppColors.primaryRed,
         tertiary: AppColors.mintGreen,
         surface: AppColors.darkSurface,
         error: AppColors.darkDanger,
@@ -73,7 +73,7 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primaryPink,
+        backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 4,
@@ -107,7 +107,7 @@ class AppTheme {
       primaryColor: AppColors.lightPrimary,
       colorScheme: const ColorScheme.light(
         primary: AppColors.lightPrimary,
-        secondary: AppColors.primaryPink,
+        secondary: AppColors.primaryRed,
         tertiary: AppColors.mintGreen,
         surface: AppColors.lightSurface,
         error: AppColors.lightDanger,
@@ -167,7 +167,7 @@ class AppTheme {
         ),
       ),
       floatingActionButtonTheme: FloatingActionButtonThemeData(
-        backgroundColor: AppColors.primaryPink,
+        backgroundColor: AppColors.primaryRed,
         foregroundColor: Colors.white,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         elevation: 4,

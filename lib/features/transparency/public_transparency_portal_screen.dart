@@ -170,10 +170,10 @@ class _PublicTransparencyPortalScreenState extends ConsumerState<PublicTranspare
             Container(
               padding: const EdgeInsets.all(6),
               decoration: BoxDecoration(
-                color: AppColors.infoBlue.withOpacity(0.2),
+                color: AppColors.primaryGreen.withOpacity(0.2),
                 borderRadius: BorderRadius.circular(8),
               ),
-              child: const Icon(Icons.account_balance, color: AppColors.infoBlue, size: 20),
+              child: const Icon(Icons.account_balance, color: AppColors.mintGreen, size: 20),
             ),
             const SizedBox(width: 10),
             const Column(
@@ -194,9 +194,11 @@ class _PublicTransparencyPortalScreenState extends ConsumerState<PublicTranspare
         bottom: TabBar(
           controller: _tabController,
           isScrollable: true,
-          indicatorColor: AppColors.infoBlue,
-          labelColor: AppColors.infoBlue,
-          unselectedLabelColor: Colors.grey,
+          indicatorColor: AppColors.primaryGreen,
+          indicatorWeight: 3,
+          labelColor: AppColors.mintGreen,
+          labelStyle: const TextStyle(fontWeight: FontWeight.bold),
+          unselectedLabelColor: Colors.white60,
           tabs: const [
             Tab(icon: Icon(Icons.corporate_fare, size: 18), text: 'NGO Transparency'),
             Tab(icon: Icon(Icons.account_balance, size: 18), text: 'Govt SDRF Spending'),

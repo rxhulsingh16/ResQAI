@@ -434,7 +434,7 @@ class _DisasterMapScreenState extends ConsumerState<DisasterMapScreen> {
           child: const Row(
             mainAxisSize: MainAxisSize.min,
             children: [
-              Icon(Icons.layers, size: 13, color: AppColors.primaryBlue),
+              Icon(Icons.layers, size: 13, color: AppColors.primaryGreen),
               SizedBox(width: 5),
               Text(
                 'Legend ▾',
@@ -637,10 +637,10 @@ class _DisasterMapScreenState extends ConsumerState<DisasterMapScreen> {
                 const SizedBox(height: 16),
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryBlue,
+                    backgroundColor: AppColors.primaryGreen,
                     foregroundColor: Colors.white,
-                    minimumSize: const Size(double.infinity, 44),
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                    minimumSize: const Size(double.infinity, 46),
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   ),
                   onPressed: () {
                     Navigator.pop(ctx);
@@ -692,9 +692,10 @@ class _DisasterMapScreenState extends ConsumerState<DisasterMapScreen> {
                     Expanded(
                       child: ElevatedButton.icon(
                         style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
+                          backgroundColor: AppColors.primaryGreen,
                           foregroundColor: Colors.white,
                           padding: const EdgeInsets.symmetric(vertical: 12),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         icon: const Icon(Icons.navigation, size: 16),
                         label: const Text('Get Directions'),

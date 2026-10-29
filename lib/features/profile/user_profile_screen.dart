@@ -579,8 +579,8 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> with Sing
 
     return AppShell(
       currentRoute: AppRoutes.citizenProfile,
-      title: 'Account & Profile',
-      breadcrumbs: const ['Account', 'Profile Settings'],
+      title: 'Profile',
+      breadcrumbs: const ['Profile'],
       child: SingleChildScrollView(
         padding: EdgeInsets.symmetric(horizontal: isMobile ? 16 : 32, vertical: 20),
         child: Center(
@@ -794,7 +794,7 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> with Sing
                           spacing: 6,
                           runSpacing: 4,
                           children: [
-                            _buildPill(user.role.title, AppColors.primaryPink),
+                            _buildPill(user.role.title, AppColors.primaryRed),
                             _buildPill('ID: ${user.citizenId}', Colors.grey),
                             if (user.district.isNotEmpty) _buildPill('📍 ${user.district}', AppColors.successGreen),
                           ],
@@ -1240,12 +1240,12 @@ class _UserProfileScreenState extends ConsumerState<UserProfileScreen> with Sing
               ),
               trailing: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPink,
+                  backgroundColor: AppColors.primaryRed,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
                   elevation: 2,
-                  shadowColor: AppColors.primaryPink.withOpacity(0.3),
+                  shadowColor: AppColors.primaryRed.withOpacity(0.3),
                 ),
                 icon: const Icon(Icons.sync, size: 16),
                 label: const Text('Check for Updates', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),

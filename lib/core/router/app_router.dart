@@ -72,6 +72,7 @@ class AppRoutes {
   static const String citizenAssistance = '/citizen/assistance';
   static const String citizenShelters = '/citizen/shelters';
   static const String citizenNotifications = '/citizen/notifications';
+  static const String profile = '/profile';
   static const String citizenProfile = '/citizen/profile';
   static const String citizenEmergencyContacts = '/citizen/emergency-contacts';
   static const String citizenDonate = '/citizen/donate';
@@ -144,6 +145,21 @@ class AppRoutes {
 
 class AppRouter {
   static final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
+  static bool _isNavigatingToSos = false;
+
+  /// Prevents duplicate stacked pushes when user taps SOS repeatedly
+  static void navigateToSos(BuildContext context) {
+    if (_isNavigatingToSos) return;
+    final current = ModalRoute.of(context)?.settings.name;
+    if (current == AppRoutes.citizenSos) return;
+    _isNavigatingToSos = true;
+    Navigator.pushNamed(context, AppRoutes.citizenSos).then((_) {
+      _isNavigatingToSos = false;
+    });
+    Future.delayed(const Duration(milliseconds: 900), () {
+      _isNavigatingToSos = false;
+    });
+  }
 
   static String getHomeRouteForRole(UserRole role) {
     switch (role) {
@@ -359,6 +375,7 @@ class AppRouter {
       case AppRoutes.citizenShelters:
         page = const CitizenSheltersScreen();
         break;
+      case AppRoutes.profile:
       case AppRoutes.citizenProfile:
       case AppRoutes.citizenEmergencyContacts:
         page = const UserProfileScreen();

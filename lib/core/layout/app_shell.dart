@@ -1,3 +1,4 @@
+import '../../shared/widgets/app_widgets.dart';
 import '../../data/services/notification_client_service.dart';
 import '../../features/notifications/notifications_screen.dart';
 import '../../data/services/app_update_service.dart';
@@ -48,6 +49,10 @@ class _AppShellState extends ConsumerState<AppShell> {
     final isMobile = width < 768;
 
     final navItems = _getNavItemsForRole(activeRole);
+    final isProfileScreen = widget.currentRoute == AppRoutes.citizenProfile ||
+        widget.currentRoute == AppRoutes.volunteerProfile ||
+        widget.currentRoute == AppRoutes.profile ||
+        widget.currentRoute == '/profile';
 
     return Scaffold(
       key: _scaffoldKey,
@@ -81,7 +86,7 @@ class _AppShellState extends ConsumerState<AppShell> {
           ),
         ],
       ),
-      bottomNavigationBar: isMobile ? _buildMobileBottomBar(context, activeRole, currentUser) : null,
+      bottomNavigationBar: (isMobile && !isProfileScreen) ? _buildMobileBottomBar(context, activeRole, currentUser) : null,
       floatingActionButton: widget.floatingActionButton,
     );
   }
@@ -99,35 +104,55 @@ class _AppShellState extends ConsumerState<AppShell> {
     final borderColor = isDark ? AppColors.darkBorder : AppColors.lightBorder;
     final canPop = Navigator.canPop(context);
 
+    final isProfileScreen = widget.currentRoute == AppRoutes.citizenProfile ||
+        widget.currentRoute == AppRoutes.volunteerProfile ||
+        widget.currentRoute == AppRoutes.profile ||
+        widget.currentRoute == '/profile';
+
     return AppBar(
       backgroundColor: surfaceColor,
       surfaceTintColor: Colors.transparent,
       elevation: 0,
       leading: isDesktop
           ? null
-          : (canPop
+          : (isProfileScreen
               ? IconButton(
-                  icon: const Icon(Icons.arrow_back, size: 22),
-                  onPressed: () => Navigator.pop(context),
-                  tooltip: 'Back',
-                )
-              : IconButton(
                   icon: const Icon(Icons.menu, size: 22),
                   onPressed: () => _scaffoldKey.currentState?.openDrawer(),
                   tooltip: 'Navigation Menu',
-                )),
-      titleSpacing: isDesktop ? 20 : (canPop ? 0 : 8),
-      title: (isMobile && canPop)
+                )
+              : (canPop
+                  ? IconButton(
+                      icon: const Icon(Icons.arrow_back, size: 22),
+                      onPressed: () => Navigator.pop(context),
+                      tooltip: 'Back',
+                    )
+                  : IconButton(
+                      icon: const Icon(Icons.menu, size: 22),
+                      onPressed: () => _scaffoldKey.currentState?.openDrawer(),
+                      tooltip: 'Navigation Menu',
+                    ))),
+      titleSpacing: isDesktop ? 20 : ((canPop && !isProfileScreen) ? 0 : 8),
+      title: isProfileScreen
           ? Text(
-              widget.title ?? AppConstants.appName,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
+              'Profile',
               style: TextStyle(
-                fontWeight: FontWeight.w700,
-                fontSize: 16,
+                fontWeight: FontWeight.w800,
+                fontSize: 18,
                 color: isDark ? Colors.white : AppColors.deepNavy,
               ),
             )
+          : ((isMobile && canPop)
+              ? Text(
+                  widget.title ?? AppConstants.appName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontWeight: FontWeight.w700,
+                    fontSize: 16,
+                    color: isDark ? Colors.white : AppColors.deepNavy,
+                  ),
+                )
           : FittedBox(
               fit: BoxFit.scaleDown,
               alignment: Alignment.centerLeft,
@@ -259,7 +284,7 @@ class _AppShellState extends ConsumerState<AppShell> {
               ),
               icon: const Icon(Icons.emergency, size: 16),
               label: const Text('SOS', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12, letterSpacing: 0.5)),
-              onPressed: () => Navigator.pushNamed(context, AppRoutes.citizenSos),
+              onPressed: () => AppRouter.navigateToSos(context),
             ),
           ),
 
@@ -729,11 +754,7 @@ class _AppShellState extends ConsumerState<AppShell> {
     UserRole activeRole,
     dynamic currentUser,
   ) {
-    return Drawer(
-      child: SafeArea(
-        child: _buildDesktopSidebar(context, navItems, activeRole, currentUser),
-      ),
-    );
+    return SideDrawer(currentRoute: widget.currentRoute);
   }
 
   Widget _buildMobileBottomBar(BuildContext context, UserRole role, UserModel? currentUser) {

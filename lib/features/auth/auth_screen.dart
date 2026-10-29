@@ -214,15 +214,15 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
                   const Divider(height: 1),
                   const SizedBox(height: 14),
 
-                  // Emergency Guest SOS Button
+                  // Emergency Guest SOS Button with Pink/Red urgency
                   OutlinedButton.icon(
                     style: OutlinedButton.styleFrom(
-                      foregroundColor: AppColors.emergencyRed,
-                      side: const BorderSide(color: AppColors.emergencyRed, width: 1.5),
-                      padding: const EdgeInsets.symmetric(vertical: 12),
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      foregroundColor: AppColors.primaryRed,
+                      side: const BorderSide(color: AppColors.primaryRed, width: 1.6),
+                      padding: const EdgeInsets.symmetric(vertical: 14),
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
-                    icon: const Icon(Icons.flash_on, size: 18),
+                    icon: const Icon(Icons.flash_on, size: 18, color: AppColors.primaryRed),
                     label: const Text(
                       'Continue as Guest (Instant SOS Only - No ID Required)',
                       style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
@@ -247,22 +247,28 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
     required bool isDark,
   }) {
     final isSelected = _activePortal == portal;
+    Color activeColor = AppColors.primaryGreen;
+    if (portal == AuthPortal.governmentAdmin) activeColor = AppColors.primaryRed;
+    if (portal == AuthPortal.volunteerNgo) activeColor = const Color(0xFF0D9488);
+
     return ElevatedButton(
       style: ElevatedButton.styleFrom(
         backgroundColor: isSelected
-            ? AppColors.primaryBlue
+            ? activeColor
             : (isDark ? AppColors.darkSurfaceCard : Colors.grey.shade100),
         foregroundColor: isSelected
             ? Colors.white
             : (isDark ? Colors.white70 : AppColors.deepNavy),
-        elevation: isSelected ? 2 : 0,
+        elevation: isSelected ? 3 : 0,
+        shadowColor: activeColor.withOpacity(0.35),
         padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 4),
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(12),
           side: BorderSide(
             color: isSelected
-                ? AppColors.primaryBlue
+                ? activeColor
                 : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
+            width: isSelected ? 1.5 : 1,
           ),
         ),
       ),
@@ -342,10 +348,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             Expanded(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: _isRegister ? AppColors.primaryBlue : (isDark ? AppColors.darkSurfaceCard : Colors.grey.shade200),
+                  backgroundColor: _isRegister ? AppColors.primaryGreen : (isDark ? AppColors.darkSurfaceCard : Colors.grey.shade200),
                   foregroundColor: _isRegister ? Colors.white : (isDark ? Colors.white70 : AppColors.deepNavy),
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 icon: const Icon(Icons.person_add, size: 16),
                 label: const Text('1. Create Citizen ID', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
@@ -356,10 +362,10 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
             Expanded(
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: !_isRegister ? AppColors.primaryBlue : (isDark ? AppColors.darkSurfaceCard : Colors.grey.shade200),
+                  backgroundColor: !_isRegister ? AppColors.primaryGreen : (isDark ? AppColors.darkSurfaceCard : Colors.grey.shade200),
                   foregroundColor: !_isRegister ? Colors.white : (isDark ? Colors.white70 : AppColors.deepNavy),
                   padding: const EdgeInsets.symmetric(vertical: 12),
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 ),
                 icon: const Icon(Icons.login, size: 16),
                 label: const Text('2. Citizen Sign In', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 12)),
@@ -505,21 +511,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ),
           const SizedBox(height: 16),
 
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryBlue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () => _handleCitizenRegistration(),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.check_circle_outline, size: 18),
-                SizedBox(width: 8),
-                Text('Create Citizen ID & Open Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppColors.greenGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: AppColors.primaryGreen.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 3)),
               ],
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => _handleCitizenRegistration(),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.check_circle_outline, size: 18),
+                  SizedBox(width: 8),
+                  Text('Create Citizen ID & Open Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ],
+              ),
             ),
           ),
         ] else ...[
@@ -554,21 +570,31 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
           ),
           const SizedBox(height: 16),
 
-          ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              backgroundColor: AppColors.primaryBlue,
-              foregroundColor: Colors.white,
-              padding: const EdgeInsets.symmetric(vertical: 14),
-              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-            ),
-            onPressed: () => _handleCitizenLogin(),
-            child: const Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.login, size: 18),
-                SizedBox(width: 8),
-                Text('Sign In to Citizen Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+          Container(
+            decoration: BoxDecoration(
+              gradient: AppColors.greenGradient,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(color: AppColors.primaryGreen.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 3)),
               ],
+            ),
+            child: ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: Colors.transparent,
+                shadowColor: Colors.transparent,
+                foregroundColor: Colors.white,
+                padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: () => _handleCitizenLogin(),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.login, size: 18),
+                  SizedBox(width: 8),
+                  Text('Sign In to Citizen Dashboard', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                ],
+              ),
             ),
           ),
         ],
@@ -702,24 +728,40 @@ class _AuthScreenState extends ConsumerState<AuthScreen> {
         ),
         const SizedBox(height: 18),
 
-        ElevatedButton(
-          style: ElevatedButton.styleFrom(
-            backgroundColor: _isAdminSuperAccess ? Colors.indigo.shade800 : AppColors.criticalRed,
-            foregroundColor: Colors.white,
-            padding: const EdgeInsets.symmetric(vertical: 15),
-            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-          ),
-          onPressed: () => _handleAdminLogin(),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(_isAdminSuperAccess ? Icons.security : Icons.shield, size: 18),
-              const SizedBox(width: 8),
-              Text(
-                _isAdminSuperAccess ? 'Sign In as Main Admin (Master Control)' : 'Sign In as Government Officer',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+        Container(
+          decoration: BoxDecoration(
+            gradient: _isAdminSuperAccess
+                ? const LinearGradient(colors: [Color(0xFF4338CA), Color(0xFF6366F1)])
+                : AppColors.redGradient,
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: [
+              BoxShadow(
+                color: (_isAdminSuperAccess ? Colors.indigo : AppColors.primaryRed).withOpacity(0.35),
+                blurRadius: 10,
+                offset: const Offset(0, 3),
               ),
             ],
+          ),
+          child: ElevatedButton(
+            style: ElevatedButton.styleFrom(
+              backgroundColor: Colors.transparent,
+              shadowColor: Colors.transparent,
+              foregroundColor: Colors.white,
+              padding: const EdgeInsets.symmetric(vertical: 15),
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            onPressed: () => _handleAdminLogin(),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(_isAdminSuperAccess ? Icons.security : Icons.shield, size: 18),
+                const SizedBox(width: 8),
+                Text(
+                  _isAdminSuperAccess ? 'Sign In as Main Admin (Master Control)' : 'Sign In as Government Officer',
+                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                ),
+              ],
+            ),
           ),
         ),
       ],

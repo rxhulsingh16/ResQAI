@@ -161,7 +161,7 @@ class _CitizenHelpRequestScreenState extends ConsumerState<CitizenHelpRequestScr
                   Theme(
                     data: Theme.of(context).copyWith(
                       colorScheme: ColorScheme.light(
-                        primary: AppColors.primaryBlue,
+                        primary: AppColors.primaryGreen,
                         surface: isDark ? AppColors.darkSurfaceCard : Colors.white,
                       ),
                     ),
@@ -181,38 +181,55 @@ class _CitizenHelpRequestScreenState extends ConsumerState<CitizenHelpRequestScr
                         }
                       },
                       controlsBuilder: (context, details) {
+                        final isLastStep = _currentStep == 4;
                         return Padding(
                           padding: const EdgeInsets.only(top: 24),
                           child: Row(
                             children: [
-                              ElevatedButton(
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: _currentStep == 4 ? AppColors.successGreen : AppColors.primaryBlue,
-                                  foregroundColor: Colors.white,
-                                  padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 12),
-                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                              Container(
+                                decoration: BoxDecoration(
+                                  gradient: isLastStep ? AppColors.redGradient : AppColors.greenGradient,
+                                  borderRadius: BorderRadius.circular(12),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: (isLastStep ? AppColors.primaryRed : AppColors.primaryGreen).withOpacity(0.35),
+                                      blurRadius: 10,
+                                      offset: const Offset(0, 3),
+                                    ),
+                                  ],
                                 ),
-                                onPressed: _isSubmitting ? null : details.onStepContinue,
-                                child: _isSubmitting
-                                    ? const SizedBox(
-                                        width: 16,
-                                        height: 16,
-                                        child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
-                                      )
-                                    : Text(
-                                        _currentStep == 4 ? 'Transmit Help Request ✓' : 'Save & Continue →',
-                                        style: const TextStyle(fontWeight: FontWeight.bold),
-                                      ),
+                                child: ElevatedButton(
+                                  style: ElevatedButton.styleFrom(
+                                    backgroundColor: Colors.transparent,
+                                    shadowColor: Colors.transparent,
+                                    foregroundColor: Colors.white,
+                                    padding: const EdgeInsets.symmetric(horizontal: 26, vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                                  ),
+                                  onPressed: _isSubmitting ? null : details.onStepContinue,
+                                  child: _isSubmitting
+                                      ? const SizedBox(
+                                          width: 18,
+                                          height: 18,
+                                          child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
+                                        )
+                                      : Text(
+                                          isLastStep ? 'Transmit Help Request ✓' : 'Save & Continue →',
+                                          style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 14),
+                                        ),
+                                ),
                               ),
                               if (_currentStep > 0) ...[
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 14),
                                 OutlinedButton(
                                   style: OutlinedButton.styleFrom(
-                                    padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 12),
-                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                    foregroundColor: isDark ? Colors.white70 : AppColors.deepNavy,
+                                    side: BorderSide(color: isDark ? Colors.white30 : Colors.grey.shade400, width: 1.2),
+                                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                                   ),
                                   onPressed: details.onStepCancel,
-                                  child: const Text('Back'),
+                                  child: const Text('Back', style: TextStyle(fontWeight: FontWeight.w600)),
                                 ),
                               ],
                             ],
@@ -277,10 +294,10 @@ class _CitizenHelpRequestScreenState extends ConsumerState<CitizenHelpRequestScr
         Container(
           padding: const EdgeInsets.all(12),
           decoration: BoxDecoration(
-            color: AppColors.primaryBlue.withOpacity(0.12),
+            color: AppColors.primaryGreen.withOpacity(0.12),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: const Icon(Icons.handshake_outlined, color: AppColors.primaryBlue, size: 26),
+          child: const Icon(Icons.handshake_outlined, color: AppColors.primaryGreen, size: 26),
         ),
         const SizedBox(width: 14),
         Expanded(
@@ -863,7 +880,7 @@ class _CitizenHelpRequestScreenState extends ConsumerState<CitizenHelpRequestScr
           contentPadding: EdgeInsets.zero,
           dense: true,
           value: _declarationConfirmed,
-          activeColor: AppColors.primaryBlue,
+          activeColor: AppColors.primaryGreen,
           title: const Text(
             'I solemnly declare that the information provided is accurate and represents genuine humanitarian need. I consent to field coordination by authorized disaster response units.',
             style: TextStyle(fontSize: 11),
@@ -984,7 +1001,7 @@ class _CitizenHelpRequestScreenState extends ConsumerState<CitizenHelpRequestScr
         ),
         actions: [
           ElevatedButton(
-            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryBlue, foregroundColor: Colors.white),
+            style: ElevatedButton.styleFrom(backgroundColor: AppColors.primaryGreen, foregroundColor: Colors.white, shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10))),
             onPressed: () {
               Navigator.pop(ctx);
               Navigator.pushReplacementNamed(context, '${AppRoutes.citizenReports}/$reqId');

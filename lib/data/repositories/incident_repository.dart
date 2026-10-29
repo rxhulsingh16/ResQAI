@@ -136,6 +136,213 @@ class IncidentsNotifier extends StateNotifier<List<IncidentModel>> {
         return item.copyWith(
           status: IncidentStatus.underReview,
           escalatedTo: 'District Disaster Magistrate Review Desk',
+          citizenReceiptDisputed: true,
+          citizenDisputeReason: reason,
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void updateIncidentStatus(String id, IncidentStatus newStatus) {
+    updateStatus(id, newStatus);
+  }
+
+  // D1. Food / Aid / Supply Requests Workflow
+  bool acceptFoodAidRequest(String id, {required String acceptedBy, required String acceptedRole}) {
+    bool accepted = false;
+    state = state.map((item) {
+      if (item.id == id) {
+        if (item.acceptedBy != null && item.acceptedBy!.isNotEmpty) {
+          return item;
+        }
+        accepted = true;
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final log = '$timestamp: Request accepted by [$acceptedRole] $acceptedBy. Mobilizing relief supply inventory.';
+        return item.copyWith(
+          acceptedBy: acceptedBy,
+          acceptedRole: acceptedRole,
+          status: IncidentStatus.helpAssigned,
+          assistanceDeliveryStatus: 'ACCEPTED',
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+    return accepted;
+  }
+
+  void markFoodAidInTransit(String id, {required String courierOrVolunteer}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final log = '$timestamp: Consignment in transit with $courierOrVolunteer. GPS telemetry route dispatched.';
+        return item.copyWith(
+          status: IncidentStatus.inProgress,
+          assistanceDeliveryStatus: 'IN_TRANSIT',
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void markFoodAidDelivered(String id, {required String deliveredBy}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final log = '$timestamp: Relief supplies delivered on scene by $deliveredBy. Awaiting citizen confirmation.';
+        return item.copyWith(
+          status: IncidentStatus.resolved,
+          assistanceDeliveryStatus: 'DELIVERED',
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void verifyReceiptByCitizen(String id, {required bool confirmed, String? disputeReason, required String citizenName}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        if (confirmed) {
+          final log = '$timestamp: Citizen $citizenName verified receipt of supplies. Case closed successfully.';
+          return item.copyWith(
+            citizenReceiptConfirmed: true,
+            citizenReceiptDisputed: false,
+            status: IncidentStatus.closed,
+            assistanceDeliveryStatus: 'VERIFIED_RECEIVED',
+            verificationHistory: [log, ...item.verificationHistory],
+          );
+        } else {
+          final log = '$timestamp: CITIZEN DISPUTE: $citizenName reported NOT received. Reason: ${disputeReason ?? "Supplies not delivered"}. Reopening case.';
+          return item.copyWith(
+            citizenReceiptConfirmed: false,
+            citizenReceiptDisputed: true,
+            citizenDisputeReason: disputeReason,
+            status: IncidentStatus.underReview,
+            assistanceDeliveryStatus: 'DISPUTED',
+            escalatedTo: 'NGO Lead & SDMA Incident Commander Desk',
+            verificationHistory: [log, ...item.verificationHistory],
+          );
+        }
+      }
+      return item;
+    }).toList();
+  }
+
+  // D2. Missing Persons Joint Verification
+  void confirmMissingPersonFoundByCitizen(String id, {required String familyNotes}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final authorityDone = item.foundConfirmedByAuthority;
+        final newStatus = authorityDone ? IncidentStatus.closed : IncidentStatus.resolved;
+        final log = '$timestamp: Reporting family confirmed missing person FOUND safe. Notes: $familyNotes. ${authorityDone ? "Both parties verified: CASE CLOSED." : "Awaiting authority verification."}';
+        return item.copyWith(
+          foundConfirmedByCitizen: true,
+          status: newStatus,
+          assistanceDeliveryStatus: authorityDone ? 'PERSON_FOUND_VERIFIED' : 'CITIZEN_FOUND_CONFIRMED',
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void confirmMissingPersonFoundByAuthority(String id, {required String officerName, required String officerRole}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final citizenDone = item.foundConfirmedByCitizen;
+        final newStatus = citizenDone ? IncidentStatus.closed : IncidentStatus.resolved;
+        final log = '$timestamp: [$officerRole] $officerName verified missing person identity on scene. ${citizenDone ? "Both parties verified: CASE CLOSED." : "Awaiting family confirmation."}';
+        return item.copyWith(
+          foundConfirmedByAuthority: true,
+          status: newStatus,
+          assistanceDeliveryStatus: citizenDone ? 'PERSON_FOUND_VERIFIED' : 'AUTHORITY_FOUND_CONFIRMED',
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  // D3. Damage Claim -> Citizen Verification & Receipt
+  void confirmCitizenClaimVerification(String id, {required String upiOrBankDetails}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final log = '$timestamp: Citizen verified statutory claim identity and confirmed payout account: $upiOrBankDetails.';
+        return item.copyWith(
+          citizenReceiptConfirmed: false,
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void confirmClaimReceiptByCitizen(String id, {required bool received, String? disputeReason}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        if (received) {
+          final log = '$timestamp: Citizen confirmed ex-gratia bank credit received. Formal release certificate generated.';
+          return item.copyWith(
+            citizenReceiptConfirmed: true,
+            citizenReceiptDisputed: false,
+            status: IncidentStatus.closed,
+            assistanceDeliveryStatus: 'DISBURSEMENT_VERIFIED',
+            verificationHistory: [log, ...item.verificationHistory],
+          );
+        } else {
+          final log = '$timestamp: CITIZEN DISPUTE: Ex-gratia funds not received in registered account. Dispute: ${disputeReason ?? "Bank credit not reflected"}. Sent to Finance audit.';
+          return item.copyWith(
+            citizenReceiptConfirmed: false,
+            citizenReceiptDisputed: true,
+            citizenDisputeReason: disputeReason,
+            status: IncidentStatus.underReview,
+            assistanceDeliveryStatus: 'DISBURSEMENT_DISPUTED',
+            escalatedTo: 'State Disaster Response Fund Finance Directorate',
+            verificationHistory: [log, ...item.verificationHistory],
+          );
+        }
+      }
+      return item;
+    }).toList();
+  }
+
+  // D5. SOS Joint Confirmation
+  void confirmSosRescuedByResponder(String id, {required String unitId}) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final citizenDone = item.sosRescuedConfirmedByCitizen;
+        final newStatus = citizenDone ? IncidentStatus.closed : IncidentStatus.resolved;
+        final log = '$timestamp: Rescue Unit $unitId arrived at coordinates and completed extraction. ${citizenDone ? "Both parties confirmed safe: SOS CLOSED." : "Awaiting citizen confirmation."}';
+        return item.copyWith(
+          sosRescuedConfirmedByResponder: true,
+          status: newStatus,
+          verificationHistory: [log, ...item.verificationHistory],
+        );
+      }
+      return item;
+    }).toList();
+  }
+
+  void confirmSosRescuedByCitizen(String id) {
+    state = state.map((item) {
+      if (item.id == id) {
+        final timestamp = DateTime.now().toIso8601String().substring(0, 16);
+        final responderDone = item.sosRescuedConfirmedByResponder;
+        final newStatus = responderDone ? IncidentStatus.closed : IncidentStatus.resolved;
+        final log = '$timestamp: Citizen confirmed safe extraction on scene. ${responderDone ? "Both parties confirmed: SOS CLOSED." : "Awaiting responder sign-off."}';
+        return item.copyWith(
+          sosRescuedConfirmedByCitizen: true,
+          status: newStatus,
           verificationHistory: [log, ...item.verificationHistory],
         );
       }

@@ -8,6 +8,7 @@ import '../../data/repositories/auth_repository.dart';
 import '../../shared/models/incident_model.dart';
 import '../../core/router/app_router.dart';
 import '../../core/layout/app_shell.dart';
+import '../../shared/widgets/interactive_sos_button.dart';
 
 class CitizenSosScreen extends ConsumerStatefulWidget {
   const CitizenSosScreen({super.key});
@@ -196,27 +197,93 @@ class _CitizenSosScreenState extends ConsumerState<CitizenSosScreen>
     );
   }
 
+  Future<void> _handleClose(BuildContext context) async {
+    if (_isSubmitting || _isArmed) {
+      final shouldCancel = await showDialog<bool>(
+        context: context,
+        builder: (ctx) => AlertDialog(
+          title: const Row(
+            children: [
+              Icon(Icons.warning_amber_rounded, color: AppColors.emergencyRed, size: 24),
+              SizedBox(width: 8),
+              Text('Cancel SOS?'),
+            ],
+          ),
+          content: const Text(
+            'An emergency SOS distress signal is currently in progress. Are you sure you want to cancel transmission?',
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Keep Sending'),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppColors.emergencyRed,
+                foregroundColor: Colors.white,
+              ),
+              onPressed: () => Navigator.pop(ctx, true),
+              child: const Text('Confirm Cancel'),
+            ),
+          ],
+        ),
+      );
+
+      if (shouldCancel == true) {
+        _countdownTimer?.cancel();
+        if (_incidentRef != null) {
+          ref.read(incidentsProvider.notifier).updateStatus(_incidentRef!, IncidentStatus.rejected);
+        }
+        setState(() {
+          _isArmed = false;
+          _isSubmitting = false;
+        });
+        _returnToHomeOrBack();
+      }
+      return;
+    }
+
+    _returnToHomeOrBack();
+  }
+
+  void _returnToHomeOrBack() {
+    if (Navigator.canPop(context)) {
+      Navigator.pop(context);
+    } else {
+      final role = ref.read(activeRoleProvider);
+      Navigator.pushReplacementNamed(context, AppRouter.getHomeRouteForRole(role));
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
 
-    return AppShell(
-      currentRoute: AppRoutes.citizenSos,
-      title: 'Emergency SOS',
-      breadcrumbs: const ['Citizen', 'Emergency SOS'],
-      child: SingleChildScrollView(
-        padding: EdgeInsets.symmetric(
-          horizontal: isMobile ? 16 : 32,
-          vertical: isMobile ? 16 : 28,
-        ),
-        child: Center(
-          child: ConstrainedBox(
-            constraints: const BoxConstraints(maxWidth: 640),
-            child: _isSubmitted
-                ? _buildIncidentStatusView(isDark, isMobile)
-                : _buildEmergencyToolView(isDark, isMobile),
+    return PopScope(
+      canPop: false,
+      onPopInvokedWithResult: (didPop, _) {
+        if (!didPop) {
+          _handleClose(context);
+        }
+      },
+      child: AppShell(
+        currentRoute: AppRoutes.citizenSos,
+        title: 'Emergency SOS',
+        breadcrumbs: const ['Citizen', 'Emergency SOS'],
+        child: SingleChildScrollView(
+          padding: EdgeInsets.symmetric(
+            horizontal: isMobile ? 16 : 32,
+            vertical: isMobile ? 16 : 28,
+          ),
+          child: Center(
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 640),
+              child: _isSubmitted
+                  ? _buildIncidentStatusView(isDark, isMobile)
+                  : _buildEmergencyToolView(isDark, isMobile),
+            ),
           ),
         ),
       ),
@@ -228,6 +295,23 @@ class _CitizenSosScreenState extends ConsumerState<CitizenSosScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Top Close (X) Header
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface2 : Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close, size: 20, color: isDark ? Colors.white : AppColors.deepNavy),
+            ),
+            tooltip: 'Close Emergency Screen',
+            onPressed: () => _handleClose(context),
+          ),
+        ),
+        const SizedBox(height: 4),
         // Clear emergency heading
         Column(
           crossAxisAlignment: CrossAxisAlignment.center,
@@ -278,112 +362,24 @@ class _CitizenSosScreenState extends ConsumerState<CitizenSosScreen>
         ),
         const SizedBox(height: 24),
 
-        // Prominent Circular SOS Control
+        // Prominent Interactive Circular SOS Control with Radar Ripple & Hold-to-Activate
         Center(
-          child: Column(
-            children: [
-              AnimatedBuilder(
-                animation: _pulseAnimation,
-                builder: (context, child) {
-                  final scale = _isArmed ? _pulseAnimation.value : 1.0;
-                  return Transform.scale(
-                    scale: scale,
-                    child: GestureDetector(
-                      onTap: _onSosButtonPressed,
-                      child: Container(
-                        width: 120,
-                        height: 120,
-                        decoration: BoxDecoration(
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: (_isArmed ? Colors.redAccent : AppColors.emergencyRed).withOpacity(0.35),
-                              blurRadius: _isArmed ? 28 : 16,
-                              spreadRadius: _isArmed ? 6 : 2,
-                            ),
-                          ],
-                        ),
-                        child: Stack(
-                          alignment: Alignment.center,
-                          children: [
-                            // Soft glow halo
-                            Container(
-                              width: 120,
-                              height: 120,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                color: (_isArmed ? Colors.redAccent : AppColors.emergencyRed).withOpacity(0.18),
-                              ),
-                            ),
-                            // Core circular button
-                            Container(
-                              width: 104,
-                              height: 104,
-                              decoration: BoxDecoration(
-                                shape: BoxShape.circle,
-                                gradient: RadialGradient(
-                                  colors: _isArmed
-                                      ? const [Color(0xFFFF5252), Color(0xFFD32F2F)]
-                                      : const [Color(0xFFEF4444), Color(0xFFB91C1C)],
-                                  center: Alignment.topLeft,
-                                  radius: 0.85,
-                                ),
-                                border: Border.all(color: Colors.white, width: 3.5),
-                              ),
-                              child: Column(
-                                mainAxisAlignment: MainAxisAlignment.center,
-                                children: [
-                                  if (_isSubmitting)
-                                    const SizedBox(
-                                      width: 28,
-                                      height: 28,
-                                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 3),
-                                    )
-                                  else ...[
-                                    const Text('✱', style: TextStyle(color: Colors.white, fontSize: 28, height: 0.9)),
-                                    Text(
-                                      _isArmed ? '$_remainingSeconds' : 'SOS',
-                                      style: const TextStyle(
-                                        color: Colors.white,
-                                        fontSize: 20,
-                                        fontWeight: FontWeight.w900,
-                                        letterSpacing: 1.5,
-                                      ),
-                                    ),
-                                  ],
-                                ],
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
-                  );
-                },
-              ),
-              const SizedBox(height: 12),
-              // Instruction Pill
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
-                decoration: BoxDecoration(
-                  color: _isArmed ? const Color(0xFFFFF1F0) : (isDark ? AppColors.darkSurface : Colors.white),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: _isArmed ? AppColors.emergencyRed : (isDark ? AppColors.darkBorder : AppColors.lightBorder),
-                  ),
-                ),
-                child: Text(
-                  _isArmed
-                      ? '⚠️ Tap again to confirm SOS dispatch (${_remainingSeconds}s)'
-                      : 'Double-tap circular button to activate SOS',
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.bold,
-                    color: _isArmed ? AppColors.emergencyRed : (isDark ? Colors.white70 : AppColors.deepNavy),
-                  ),
-                ),
-              ),
-            ],
+          child: InteractiveSosButton(
+            mode: SosButtonMode.circle,
+            width: 140,
+            localityName: _locationName,
+            isSubmitting: _isSubmitting,
+            activeIncidentId: _isSubmitted ? _incidentRef : null,
+            onTriggered: _submitSos,
+            onCancel: () {
+              setState(() {
+                _isSubmitted = false;
+                _incidentRef = null;
+              });
+              ScaffoldMessenger.of(context).showSnackBar(
+                const SnackBar(content: Text('Distress beacon cancelled.')),
+              );
+            },
           ),
         ),
         const SizedBox(height: 26),
@@ -614,6 +610,23 @@ class _CitizenSosScreenState extends ConsumerState<CitizenSosScreen>
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        // Top Close (X) Header
+        Align(
+          alignment: Alignment.centerRight,
+          child: IconButton(
+            icon: Container(
+              padding: const EdgeInsets.all(6),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface2 : Colors.grey.shade200,
+                shape: BoxShape.circle,
+              ),
+              child: Icon(Icons.close, size: 20, color: isDark ? Colors.white : AppColors.deepNavy),
+            ),
+            tooltip: 'Return to Dashboard',
+            onPressed: () => _handleClose(context),
+          ),
+        ),
+        const SizedBox(height: 4),
         // Verified Success Header
         Container(
           padding: const EdgeInsets.all(20),

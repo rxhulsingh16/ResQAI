@@ -59,6 +59,17 @@ class IncidentModel {
   final String? assistanceDeliveryStatus; // 'PENDING_SANCTION', 'SANCTIONED', 'DISBURSED', 'REJECTED'
   final String? assistanceRejectionReason;
 
+  // Connected End-to-End Workflow Fields (Workstream D)
+  final String? acceptedBy;
+  final String? acceptedRole;
+  final bool citizenReceiptConfirmed;
+  final bool citizenReceiptDisputed;
+  final String? citizenDisputeReason;
+  final bool foundConfirmedByCitizen;
+  final bool foundConfirmedByAuthority;
+  final bool sosRescuedConfirmedByCitizen;
+  final bool sosRescuedConfirmedByResponder;
+
   IncidentModel({
     required this.id,
     required this.title,
@@ -111,6 +122,15 @@ class IncidentModel {
     this.reliefAssistanceCategory,
     this.assistanceDeliveryStatus,
     this.assistanceRejectionReason,
+    this.acceptedBy,
+    this.acceptedRole,
+    this.citizenReceiptConfirmed = false,
+    this.citizenReceiptDisputed = false,
+    this.citizenDisputeReason,
+    this.foundConfirmedByCitizen = false,
+    this.foundConfirmedByAuthority = false,
+    this.sosRescuedConfirmedByCitizen = false,
+    this.sosRescuedConfirmedByResponder = false,
   });
 
   IncidentModel copyWith({
@@ -165,6 +185,15 @@ class IncidentModel {
     String? reliefAssistanceCategory,
     String? assistanceDeliveryStatus,
     String? assistanceRejectionReason,
+    String? acceptedBy,
+    String? acceptedRole,
+    bool? citizenReceiptConfirmed,
+    bool? citizenReceiptDisputed,
+    String? citizenDisputeReason,
+    bool? foundConfirmedByCitizen,
+    bool? foundConfirmedByAuthority,
+    bool? sosRescuedConfirmedByCitizen,
+    bool? sosRescuedConfirmedByResponder,
   }) {
     return IncidentModel(
       id: id ?? this.id,
@@ -218,6 +247,15 @@ class IncidentModel {
       reliefAssistanceCategory: reliefAssistanceCategory ?? this.reliefAssistanceCategory,
       assistanceDeliveryStatus: assistanceDeliveryStatus ?? this.assistanceDeliveryStatus,
       assistanceRejectionReason: assistanceRejectionReason ?? this.assistanceRejectionReason,
+      acceptedBy: acceptedBy ?? this.acceptedBy,
+      acceptedRole: acceptedRole ?? this.acceptedRole,
+      citizenReceiptConfirmed: citizenReceiptConfirmed ?? this.citizenReceiptConfirmed,
+      citizenReceiptDisputed: citizenReceiptDisputed ?? this.citizenReceiptDisputed,
+      citizenDisputeReason: citizenDisputeReason ?? this.citizenDisputeReason,
+      foundConfirmedByCitizen: foundConfirmedByCitizen ?? this.foundConfirmedByCitizen,
+      foundConfirmedByAuthority: foundConfirmedByAuthority ?? this.foundConfirmedByAuthority,
+      sosRescuedConfirmedByCitizen: sosRescuedConfirmedByCitizen ?? this.sosRescuedConfirmedByCitizen,
+      sosRescuedConfirmedByResponder: sosRescuedConfirmedByResponder ?? this.sosRescuedConfirmedByResponder,
     );
   }
 

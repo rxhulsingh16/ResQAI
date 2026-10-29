@@ -1,10 +1,14 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import '../../core/constants/app_constants.dart';
 import '../../core/theme/app_colors.dart';
 import '../../core/router/app_router.dart';
 import '../../core/layout/app_shell.dart';
 import '../../data/repositories/auth_repository.dart';
 import 'volunteer_portal_screen.dart';
+import '../../data/repositories/incident_repository.dart';
+import '../../shared/models/incident_model.dart';
+import '../../data/services/notification_client_service.dart';
 
 class VolunteerDashboardScreen extends ConsumerStatefulWidget {
   const VolunteerDashboardScreen({super.key});
@@ -20,6 +24,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
   Widget build(BuildContext context) {
     final tasks = ref.watch(volunteerTasksProvider);
     final user = ref.watch(authProvider);
+    final incidents = ref.watch(incidentsProvider);
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final width = MediaQuery.of(context).size.width;
     final isMobile = width < 768;
@@ -132,7 +137,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                 children: [
                   Expanded(child: _buildStatCard('ACCEPTED TASKS', '${acceptedTasks.length}', AppColors.primaryGreen, isDark)),
                   const SizedBox(width: 10),
-                  Expanded(child: _buildStatCard('COMPLETED', '${completedTasks.length}', AppColors.primaryPink, isDark)),
+                  Expanded(child: _buildStatCard('COMPLETED', '${completedTasks.length}', AppColors.primaryRed, isDark)),
                   const SizedBox(width: 10),
                   Expanded(child: _buildStatCard('SERVICE HRS', '${completedTasks.length * 4 + 12}h', const Color(0xFF0284C7), isDark)),
                 ],
@@ -142,7 +147,7 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                 children: [
                   Expanded(child: _buildStatCard('ACCEPTED TASKS', '${acceptedTasks.length}', AppColors.primaryGreen, isDark)),
                   const SizedBox(width: 14),
-                  Expanded(child: _buildStatCard('COMPLETED MISSIONS', '${completedTasks.length}', AppColors.primaryPink, isDark)),
+                  Expanded(child: _buildStatCard('COMPLETED MISSIONS', '${completedTasks.length}', AppColors.primaryRed, isDark)),
                   const SizedBox(width: 14),
                   Expanded(child: _buildStatCard('TOTAL SERVICE HOURS', '${completedTasks.length * 4 + 12} hrs', const Color(0xFF0284C7), isDark)),
                 ],
@@ -178,10 +183,10 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
                         Container(
                           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                           decoration: BoxDecoration(
-                            color: AppColors.primaryPink.withOpacity(0.12),
+                            color: AppColors.primaryRed.withOpacity(0.12),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: const Text('EN ROUTE', style: TextStyle(color: AppColors.primaryPink, fontWeight: FontWeight.bold, fontSize: 10)),
+                          child: const Text('EN ROUTE', style: TextStyle(color: AppColors.primaryRed, fontWeight: FontWeight.bold, fontSize: 10)),
                         ),
                       ],
                     ),
@@ -232,6 +237,110 @@ class _VolunteerDashboardScreenState extends ConsumerState<VolunteerDashboardScr
               ),
               const SizedBox(height: 24),
             ],
+
+            // Live Citizen Aid Requirements Queue for Volunteers
+            Container(
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkSurface : Colors.white,
+                borderRadius: BorderRadius.circular(16),
+                border: Border.all(color: isDark ? AppColors.darkBorder : AppColors.lightBorder),
+              ),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      const Text('Live Citizen Relief Requests', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 16)),
+                      Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                        decoration: BoxDecoration(
+                          color: AppColors.primaryGreen.withOpacity(0.12),
+                          borderRadius: BorderRadius.circular(8),
+                        ),
+                        child: Text('${incidents.where((i) => i.status != IncidentStatus.resolved).length} Open in District', style: const TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                      ),
+                    ],
+                  ),
+                  const SizedBox(height: 12),
+                  for (final inc in incidents.where((i) => i.status != IncidentStatus.resolved).take(3)) ...[
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 8),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(8),
+                            decoration: BoxDecoration(
+                              color: AppColors.primaryGreen.withOpacity(0.12),
+                              shape: BoxShape.circle,
+                            ),
+                            child: const Icon(Icons.handshake_outlined, color: AppColors.primaryGreen, size: 18),
+                          ),
+                          const SizedBox(width: 12),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(inc.title, style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+                                const SizedBox(height: 2),
+                                Text('${inc.address} • ${inc.category.label}', style: const TextStyle(fontSize: 11, color: Colors.grey)),
+                              ],
+                            ),
+                          ),
+                          Builder(
+                            builder: (context) {
+                              final isVolunteerAssigned = inc.assignedTeam?.contains('Volunteer') ?? false;
+                              if (isVolunteerAssigned) {
+                                return Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                                  decoration: BoxDecoration(
+                                    color: AppColors.primaryGreen.withOpacity(0.12),
+                                    borderRadius: BorderRadius.circular(8),
+                                  ),
+                                  child: const Text('Claimed by You ✓', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: AppColors.primaryGreen)),
+                                );
+                              }
+                              return ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: AppColors.primaryGreen,
+                                  foregroundColor: Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                                  minimumSize: Size.zero,
+                                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                                ),
+                                onPressed: () {
+                                  final volName = user?.name ?? 'Volunteer';
+                                  ref.read(incidentsProvider.notifier).updateStatus(inc.id, IncidentStatus.helpAssigned, team: 'Volunteer: ' + volName);
+                                  ref.read(notificationsProvider.notifier).addAlertNotification(
+                                    title: '🤝 Volunteer Dispatched for ' + inc.id,
+                                    body: volName + ' accepted citizen relief request for "' + inc.title + '" at ' + inc.address + '.',
+                                    severity: 'INFO',
+                                    source: 'Volunteer Network',
+                                    type: 'REQUIREMENT',
+                                    direction: 'SENT',
+                                    status: 'ACCEPTED & DISPATCHED',
+                                  );
+                                  ScaffoldMessenger.of(context).showSnackBar(
+                                    SnackBar(
+                                      content: Text('Accepted task for "' + inc.title + '"! Dispatched as volunteer.'),
+                                      backgroundColor: AppColors.primaryGreen,
+                                    ),
+                                  );
+                                },
+                                child: const Text('Volunteer to Assist', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 11)),
+                              );
+                            },
+                          ),
+                        ],
+                      ),
+                    ),
+                    const Divider(height: 12),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(height: 24),
 
             // Opportunities Navigator
             Container(

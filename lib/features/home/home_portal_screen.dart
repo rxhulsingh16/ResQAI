@@ -84,37 +84,59 @@ class HomePortalScreen extends ConsumerWidget {
                   ),
                   const SizedBox(height: 20),
 
-                  // Immediate Action Buttons
+                  // Immediate Action Buttons with Green & Pink Synergy
                   Wrap(
                     spacing: 12,
                     runSpacing: 10,
                     children: [
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.emergencyRed,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: AppColors.redGradient,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: AppColors.primaryRed.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 3)),
+                          ],
                         ),
-                        icon: const Icon(Icons.emergency, size: 18),
-                        label: const Text('Get Emergency SOS Help', style: TextStyle(fontWeight: FontWeight.bold)),
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.citizenSos),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.emergency, size: 18),
+                          label: const Text('Get Emergency SOS Help', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.citizenSos),
+                        ),
                       ),
-                      ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: AppColors.primaryBlue,
-                          foregroundColor: Colors.white,
-                          padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                      Container(
+                        decoration: BoxDecoration(
+                          gradient: AppColors.greenGradient,
+                          borderRadius: BorderRadius.circular(12),
+                          boxShadow: [
+                            BoxShadow(color: AppColors.primaryGreen.withOpacity(0.35), blurRadius: 10, offset: const Offset(0, 3)),
+                          ],
                         ),
-                        icon: const Icon(Icons.map, size: 18),
-                        label: const Text('View Tactical Disaster Map', style: TextStyle(fontWeight: FontWeight.bold)),
-                        onPressed: () => Navigator.pushNamed(context, AppRoutes.disasterMap),
+                        child: ElevatedButton.icon(
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: Colors.transparent,
+                            shadowColor: Colors.transparent,
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 14),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                          ),
+                          icon: const Icon(Icons.map, size: 18),
+                          label: const Text('View Tactical Disaster Map', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 14)),
+                          onPressed: () => Navigator.pushNamed(context, AppRoutes.disasterMap),
+                        ),
                       ),
                       OutlinedButton.icon(
                         style: OutlinedButton.styleFrom(
+                          foregroundColor: AppColors.primaryGreen,
+                          side: const BorderSide(color: AppColors.primaryGreen, width: 1.5),
                           padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 14),
-                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                         ),
                         icon: const Icon(Icons.account_balance, size: 18),
                         label: const Text('Explore Public Transparency', style: TextStyle(fontWeight: FontWeight.bold)),
@@ -142,17 +164,35 @@ class HomePortalScreen extends ConsumerWidget {
             // 3. HOW THE RESCUE & RELIEF LIFECYCLE WORKS
             Text('HOW RESQAI ORCHESTRATES DISASTER RELIEF', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, letterSpacing: 0.8, color: isDark ? AppColors.darkTextSecondary : AppColors.mutedText)),
             const SizedBox(height: 12),
-            Row(
-              children: [
-                Expanded(child: _buildStepCard('1. Citizen 1-Tap SOS', 'Victim distress and GPS coordinates ingested into emergency queue.', Icons.touch_app, isDark)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStepCard('2. AI Prioritization', 'Life-safety score calculated using water depth & elderly flags.', Icons.psychology, isDark)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStepCard('3. Unit Dispatch', 'Nearest NDRF boat or SDRF ambulance assigned via optimal route.', Icons.directions_boat, isDark)),
-                const SizedBox(width: 12),
-                Expanded(child: _buildStepCard('4. Public Audit', 'Every relief delivery and expenditure published to the ledger.', Icons.verified, isDark)),
-              ],
-            ),
+            if (isMobile) ...[
+              Row(
+                children: [
+                  Expanded(child: _buildStepCard('1. Citizen SOS', 'Victim GPS coordinates ingested into emergency queue.', Icons.touch_app, isDark)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildStepCard('2. AI Priority', 'Life-safety score calculated using water depth & elderly flags.', Icons.psychology, isDark)),
+                ],
+              ),
+              const SizedBox(height: 10),
+              Row(
+                children: [
+                  Expanded(child: _buildStepCard('3. Unit Dispatch', 'Nearest NDRF boat or SDRF vehicle dispatched via safe route.', Icons.directions_boat, isDark)),
+                  const SizedBox(width: 10),
+                  Expanded(child: _buildStepCard('4. Public Audit', 'Every relief delivery & grant published to the transparent ledger.', Icons.verified, isDark)),
+                ],
+              ),
+            ] else ...[
+              Row(
+                children: [
+                  Expanded(child: _buildStepCard('1. Citizen 1-Tap SOS', 'Victim distress and GPS coordinates ingested into emergency queue.', Icons.touch_app, isDark)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildStepCard('2. AI Prioritization', 'Life-safety score calculated using water depth & elderly flags.', Icons.psychology, isDark)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildStepCard('3. Unit Dispatch', 'Nearest NDRF boat or SDRF ambulance assigned via optimal route.', Icons.directions_boat, isDark)),
+                  const SizedBox(width: 12),
+                  Expanded(child: _buildStepCard('4. Public Audit', 'Every relief delivery and expenditure published to the ledger.', Icons.verified, isDark)),
+                ],
+              ),
+            ],
             const SizedBox(height: 28),
 
             // 4. STATUTORY SAFETY DISCLAIMER FOOTER

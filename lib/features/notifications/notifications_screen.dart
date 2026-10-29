@@ -54,7 +54,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
             title: const Row(
               children: [
-                Icon(Icons.campaign, color: AppColors.primaryPink, size: 24),
+                Icon(Icons.campaign, color: AppColors.primaryRed, size: 24),
                 SizedBox(width: 10),
                 Text('Broadcast Alert', style: TextStyle(fontSize: 17, fontWeight: FontWeight.bold)),
               ],
@@ -128,7 +128,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
               ),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primaryPink,
+                  backgroundColor: AppColors.primaryRed,
                   foregroundColor: Colors.white,
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
@@ -206,7 +206,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
                 decoration: BoxDecoration(
-                  color: AppColors.primaryPink,
+                  color: AppColors.primaryRed,
                   borderRadius: BorderRadius.circular(10),
                 ),
                 child: Text(
@@ -249,7 +249,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
                       width: 7,
                       height: 7,
                       decoration: const BoxDecoration(
-                        color: AppColors.primaryPink,
+                        color: AppColors.primaryRed,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -392,7 +392,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
 
     return RefreshIndicator(
       onRefresh: () => ref.read(notificationsProvider.notifier).refreshFromServer(),
-      color: AppColors.primaryPink,
+      color: AppColors.primaryRed,
       child: Column(
         children: [
           // Filter Chips & New Broadcast Action
@@ -411,7 +411,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
                 ElevatedButton.icon(
                   onPressed: _showNewBroadcastDialog,
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: AppColors.primaryPink,
+                    backgroundColor: AppColors.primaryRed,
                     foregroundColor: Colors.white,
                     padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                     minimumSize: Size.zero,
@@ -440,8 +440,8 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
                         OutlinedButton(
                           onPressed: _showNewBroadcastDialog,
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: AppColors.primaryPink,
-                            side: const BorderSide(color: AppColors.primaryPink),
+                            foregroundColor: AppColors.primaryRed,
+                            side: const BorderSide(color: AppColors.primaryRed),
                           ),
                           child: const Text('Create Emergency Broadcast'),
                         ),
@@ -466,7 +466,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
   Widget _buildFilterChip(String label, String value, String current, Function(String) onSelect, bool isDark, {bool isHighlight = false, bool isEmergency = false}) {
     final isSelected = current == value;
     Color activeBg = AppColors.primaryGreen;
-    if (isEmergency || isHighlight) activeBg = AppColors.primaryPink;
+    if (isEmergency || isHighlight) activeBg = AppColors.primaryRed;
 
     return InkWell(
       onTap: () => onSelect(value),
@@ -564,7 +564,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
                       width: 8,
                       height: 8,
                       decoration: const BoxDecoration(
-                        color: AppColors.primaryPink,
+                        color: AppColors.primaryRed,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -622,7 +622,7 @@ class _NotificationsScreenState extends ConsumerState<NotificationsScreen> with 
 
   Widget _buildSentCard(BuildContext context, AppNotificationItem item, bool isDark) {
     final isActive = item.status.contains('ACTIVE');
-    final statusColor = isActive ? AppColors.primaryPink : AppColors.primaryGreen;
+    final statusColor = isActive ? AppColors.primaryRed : AppColors.primaryGreen;
 
     return Container(
       padding: const EdgeInsets.all(14),

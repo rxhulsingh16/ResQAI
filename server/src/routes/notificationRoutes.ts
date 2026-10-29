@@ -58,11 +58,32 @@ notificationRouter.get('/unread-count', authenticate, (req: Request, res: Respon
   return res.json({ unreadCount: count });
 });
 
-// NTF-9: List user notifications with filtering
-notificationRouter.get('/', authenticate, (req: Request, res: Response) => {
-  const filter = req.query.filter as string | undefined;
-  const notifications = getUserNotifications(req.user!.userId, filter);
-  return res.json({ notifications, total: notifications.length });
+// NTF-9: List user notifications with filtering, or return public disaster notifications if unauthenticated
+notificationRouter.get('/', (req: Request, res: Response) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authenticate(req, res, () => {
+      const filter = req.query.filter as string | undefined;
+      const notifications = getUserNotifications(req.user!.userId, filter);
+      return res.json({ success: true, notifications, total: notifications.length });
+    });
+  }
+
+  // Return public disaster broadcast notifications when unauthenticated
+  const publicAlerts = require('../db/database').db.prepare("SELECT id, title, description, severity, issued_at FROM official_alerts WHERE is_paused = 0 ORDER BY issued_at DESC LIMIT 20").all();
+  return res.json({
+    success: true,
+    service: 'ResQAI Emergency Push & In-App Notification Service',
+    total: publicAlerts.length,
+    notifications: publicAlerts.map((a: any) => ({
+      id: a.id,
+      title: a.title,
+      body: a.description,
+      channel: 'BROADCAST_ALERT',
+      severity: a.severity,
+      createdAt: a.issued_at
+    }))
+  });
 });
 
 // Mark single notification as read
@@ -94,7 +115,7 @@ notificationRouter.post('/subscribe-topic', authenticate, (req: Request, res: Re
   if (!topic) {
     return res.status(400).json({ error: 'BAD_REQUEST', message: 'topic string is required' });
   }
-  return res.json({ success: true, message: Subscribed to topic: , topic });
+  return res.json({ success: true, message: `Subscribed to topic: ${topic}`, topic });
 });
 
 // POST /api/v1/notifications/topic-broadcast — Broadcast high-priority push to entire sector/topic

@@ -5,6 +5,36 @@ import { logAuditEvent } from '../services/auditService';
 
 export const reliefRouter = Router();
 
+// GET /api/v1/relief: Relief coordination overview & needs matrix
+reliefRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const matrix = ReliefService.getNeedsMatrix();
+    const shelters = db.prepare('SELECT * FROM shelters').all() as any[];
+    res.json({
+      success: true,
+      service: 'ResQAI Disaster Relief & Supply Allocation System',
+      totalShelters: shelters.length,
+      needsMatrix: matrix
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/relief/shelters: Operational relief camps & capacities
+reliefRouter.get('/shelters', (req: Request, res: Response) => {
+  try {
+    const shelters = db.prepare('SELECT * FROM shelters').all();
+    res.json({
+      success: true,
+      count: shelters.length,
+      data: shelters
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/v1/relief/matrix
  * PRD E6 & H4-6: Returns full needs matrix with coverage percentages, shortage counts, and system outputs

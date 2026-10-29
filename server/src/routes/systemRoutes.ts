@@ -7,6 +7,22 @@ import { logAuditEvent } from '../services/auditService';
 
 export const systemRouter = Router();
 
+// GET /api/v1/system: System operations, telemetry and health overview
+systemRouter.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    service: 'ResQAI System Diagnostics & Telemetry',
+    status: 'ONLINE',
+    uptimeSeconds: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString(),
+    endpoints: {
+      health: '/api/v1/system/health',
+      appVersion: '/api/v1/system/app-version',
+      backup: 'POST /api/v1/system/backup'
+    }
+  });
+});
+
 // PRD v2.0 Phase 3 (F-13): Backup and System Health Monitoring Page
 systemRouter.get('/health', (req: Request, res: Response) => {
   const startTime = Date.now();

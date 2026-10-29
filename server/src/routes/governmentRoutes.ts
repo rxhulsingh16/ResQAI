@@ -6,6 +6,49 @@ import { logAuditEvent } from '../services/auditService';
 
 export const governmentRouter = Router();
 
+// GET /api/v1/government: Government command & administration overview
+governmentRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const sdrfAllocations = db.prepare('SELECT * FROM government_sdrf_allocations').all() as any[];
+    const interDistrictRequests = db.prepare('SELECT * FROM inter_district_requests').all() as any[];
+    const targetedNotices = db.prepare('SELECT * FROM targeted_notices').all() as any[];
+
+    res.json({
+      success: true,
+      service: 'ResQAI Government Disaster Command & Inter-Agency Coordination',
+      stats: {
+        activeSdrfAllocations: sdrfAllocations.length,
+        interDistrictRequestsCount: interDistrictRequests.length,
+        targetedNoticesDispatched: targetedNotices.length
+      },
+      sdrfAllocations,
+      interDistrictRequests
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/government/command-summary: High-level inter-agency summary
+governmentRouter.get('/command-summary', (req: Request, res: Response) => {
+  try {
+    const sdrfAllocations = db.prepare('SELECT * FROM government_sdrf_allocations').all() as any[];
+    const interDistrictRequests = db.prepare('SELECT * FROM inter_district_requests').all() as any[];
+    const targetedNotices = db.prepare('SELECT * FROM targeted_notices').all() as any[];
+
+    res.json({
+      success: true,
+      data: {
+        sdrfAllocations,
+        interDistrictRequests,
+        targetedNoticesCount: targetedNotices.length
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/v1/government/oversight
  * R-GOV-1: Jurisdiction oversight dashboard across incidents, claims, alerts, NGOs, funds & inventory.

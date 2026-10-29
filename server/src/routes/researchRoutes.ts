@@ -6,6 +6,43 @@ import { logAuditEvent } from '../services/auditService';
 
 export const researchRouter = Router();
 
+// GET /api/v1/research: Research features and indicators overview
+researchRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const silentZones = db.prepare('SELECT * FROM silent_zone_events').all() as any[];
+    const feedbackCount = (db.prepare('SELECT count(*) as count FROM ai_prediction_feedback').get() as any)?.count || 0;
+
+    res.json({
+      success: true,
+      service: 'ResQAI Research, Explainability & Ground-Truth Intelligence',
+      silentZonesDetected: silentZones.length,
+      responderFeedbackCount: feedbackCount,
+      endpoints: {
+        situationSummary: '/api/v1/research/situation-summary',
+        silentZones: '/api/v1/research/silent-zones',
+        priorityCalculation: '/api/v1/research/priority-calculator',
+        volunteerMatching: '/api/v1/research/volunteer-matching'
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/research/silent-zones: Communication and reporting blackout events
+researchRouter.get('/silent-zones', (req: Request, res: Response) => {
+  try {
+    const events = db.prepare('SELECT * FROM silent_zone_events ORDER BY flagged_at DESC').all();
+    res.json({
+      success: true,
+      count: events.length,
+      data: events
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 export interface PriorityCalculationParams {
   urgency: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
   people_affected?: number;

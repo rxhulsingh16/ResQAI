@@ -8,6 +8,31 @@ import { logAuditEvent } from '../services/auditService';
 
 export const alertRouter = Router();
 
+// GET /api/v1/alerts: Retrieve active official and resource shortage alerts
+alertRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const officialAlerts = db.prepare(`
+      SELECT * FROM official_alerts 
+      WHERE is_paused = 0 
+      ORDER BY issued_at DESC
+    `).all() as any[];
+
+    const resourceAlerts = db.prepare(`
+      SELECT * FROM resource_alerts 
+      ORDER BY created_at DESC
+    `).all() as any[];
+
+    res.json({
+      success: true,
+      count: officialAlerts.length + resourceAlerts.length,
+      officialAlerts,
+      resourceAlerts
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // PRD v2.0 Phase 4: Official alert adapters (IMD, NDMA, GDACS) with fetch time and Official label
 alertRouter.get('/official-feeds', (req: Request, res: Response) => {
   const fetchTime = new Date().toISOString();

@@ -49,6 +49,29 @@ export class NGOService {
     return stmt.get(id);
   }
 
+  public static getNGOCampaigns(ngoId: string) {
+    const stmt = db.prepare('SELECT * FROM campaigns WHERE ngo_id = ? ORDER BY created_at DESC');
+    return stmt.all(ngoId) as any[];
+  }
+
+  public static getNGOBalance(ngoId: string) {
+    const stmt = db.prepare(`
+      SELECT 
+        COALESCE(SUM(c.received_amount_paise), 0) as totalReceivedPaise,
+        COALESCE(SUM(c.spent_amount_paise), 0) as totalDisbursedPaise
+      FROM campaigns c
+      WHERE c.ngo_id = ?
+    `);
+    const row = stmt.get(ngoId) as any;
+    const totalReceivedPaise = Number(row?.totalReceivedPaise || 0);
+    const totalDisbursedPaise = Number(row?.totalDisbursedPaise || 0);
+    return {
+      totalReceivedPaise,
+      totalDisbursedPaise,
+      netBalancePaise: totalReceivedPaise - totalDisbursedPaise
+    };
+  }
+
   public static registerNGO(input: NGORegistrationInput) {
     const id = `NGO-${crypto.randomUUID().substring(0, 8).toUpperCase()}`;
     const fcraVerified = input.fcra_number && input.fcra_valid_until ? 1 : 0;

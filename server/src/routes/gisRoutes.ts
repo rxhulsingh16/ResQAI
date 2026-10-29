@@ -20,6 +20,73 @@ function ensureGisFixtures() {
   }
 }
 
+// GET /api/v1/gis: Overview of GIS layers, stats, and safe corridors
+gisRouter.get('/', (req: Request, res: Response) => {
+  ensureGisFixtures();
+  try {
+    const areas = db.prepare('SELECT * FROM affected_areas').all();
+    const closures = db.prepare('SELECT * FROM road_closures').all();
+    const shelters = db.prepare('SELECT * FROM shelters').all();
+    const activeIncidents = db.prepare("SELECT count(*) as c FROM incidents WHERE status NOT IN ('CLOSED', 'REJECTED')").get() as any;
+
+    res.json({
+      success: true,
+      service: 'ResQAI GIS & Geospatial Navigation Engine',
+      stats: {
+        affectedAreasCount: areas.length,
+        activeRoadClosures: closures.length,
+        operationalShelters: shelters.length,
+        activeIncidentsCount: activeIncidents?.c || 0
+      },
+      endpoints: {
+        layers: '/api/v1/gis/layers',
+        corridors: '/api/v1/gis/corridors',
+        stats: '/api/v1/gis/stats',
+        shelters: '/api/v1/gis/shelters/capacity-board'
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/gis/stats
+gisRouter.get('/stats', (req: Request, res: Response) => {
+  try {
+    const areas = db.prepare('SELECT count(*) as c FROM affected_areas').get() as any;
+    const closures = db.prepare('SELECT count(*) as c FROM road_closures').get() as any;
+    const shelters = db.prepare('SELECT count(*) as c FROM shelters').get() as any;
+    const activeIncidents = db.prepare("SELECT count(*) as c FROM incidents WHERE status NOT IN ('CLOSED', 'REJECTED')").get() as any;
+
+    res.json({
+      success: true,
+      data: {
+        affectedAreas: areas?.c || 0,
+        activeRoadClosures: closures?.c || 0,
+        shelters: shelters?.c || 0,
+        activeIncidents: activeIncidents?.c || 0
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/gis/corridors
+gisRouter.get('/corridors', (req: Request, res: Response) => {
+  try {
+    ensureGisFixtures();
+    const closures = db.prepare('SELECT * FROM road_closures').all();
+    res.json({
+      success: true,
+      count: closures.length,
+      roadClosures: closures
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // FR-20, FR-21, FR-24: Retrieve all GIS map layers with distinct metadata
 gisRouter.get('/layers', (req: Request, res: Response) => {
   ensureGisFixtures();
@@ -301,6 +368,38 @@ gisRouter.post('/safe-route', (req: Request, res: Response) => {
 
 // FR-16, FR-17: Responder Task Status Updates & Resource Request
 export const responderRouter = Router();
+
+// GET /api/v1/responder: Responder teams and tasks overview
+responderRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const teams = db.prepare('SELECT * FROM rescue_teams').all() as any[];
+    const activeAssignments = db.prepare("SELECT * FROM assignments WHERE status != 'RESOLVED'").all() as any[];
+    res.json({
+      success: true,
+      service: 'ResQAI Emergency Responder & Field Team Service',
+      totalTeams: teams.length,
+      activeAssignmentsCount: activeAssignments.length,
+      teams,
+      assignments: activeAssignments
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/responder/teams: List rescue teams
+responderRouter.get('/teams', (req: Request, res: Response) => {
+  try {
+    const teams = db.prepare('SELECT * FROM rescue_teams').all();
+    res.json({
+      success: true,
+      count: teams.length,
+      data: teams
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
 
 // Retrieve tasks assigned to a team
 responderRouter.get('/tasks/:teamId', (req: Request, res: Response) => {

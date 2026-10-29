@@ -38,6 +38,39 @@ import {
 export const authRouter = Router();
 const TWO_FACTOR_JWT_SECRET = 'resqai_disaster_2fa_temp_key_2026';
 
+// GET /api/v1/auth: Authentication service and protocol status
+authRouter.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    service: 'ResQAI Authentication & Identity Security Engine',
+    securityStandards: {
+      passwordHashing: 'Argon2id (RFC 9106)',
+      tokenExchange: 'Dual-Token JWT with Refresh Rotation',
+      twoFactorAuth: 'TOTP / High-Privilege 2FA Gates (Admin, Govt, NGO)',
+      rateLimiting: 'Account Lockout after 5 failed attempts'
+    },
+    supportedRoles: [
+      'CITIZEN',
+      'VOLUNTEER',
+      'NGO',
+      'GOVT_OFFICER',
+      'RESPONDER',
+      'DONOR',
+      'AUDITOR',
+      'ADMIN'
+    ],
+    endpoints: {
+      register: 'POST /api/v1/auth/register',
+      login: 'POST /api/v1/auth/login',
+      otpRequest: 'POST /api/v1/auth/otp/request',
+      otpVerify: 'POST /api/v1/auth/otp/verify',
+      refresh: 'POST /api/v1/auth/refresh',
+      me: 'GET /api/v1/auth/me',
+      logout: 'POST /api/v1/auth/logout'
+    }
+  });
+});
+
 // Role landing home router helper per PRD v2.0
 export function getHomeRouteForRole(role: string): string {
   switch (role) {

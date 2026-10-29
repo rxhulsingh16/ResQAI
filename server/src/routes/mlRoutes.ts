@@ -3,6 +3,41 @@ import { FloodMLService } from '../services/floodMLService';
 
 export const mlRouter = Router();
 
+// GET /api/v1/ml: Machine Learning early warning & hazard forecasting
+mlRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const predictions = FloodMLService.getActiveHazardPredictions();
+    res.json({
+      success: true,
+      service: 'ResQAI Machine Learning Inundation & Early Warning Engine',
+      model: 'Calibrated Gradient-Boosted Hydrologic Classifier',
+      activePredictionsCount: predictions.length,
+      data: predictions,
+      endpoints: {
+        predictions: '/api/v1/ml/predictions',
+        floodPrediction: '/api/v1/ml/flood-prediction',
+        predict: 'POST /api/v1/ml/predict'
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/ml/flood-prediction: Alias to active predictions
+mlRouter.get('/flood-prediction', (req: Request, res: Response) => {
+  try {
+    const predictions = FloodMLService.getActiveHazardPredictions();
+    res.json({
+      success: true,
+      count: predictions.length,
+      data: predictions
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/v1/ml/predictions
  * PRD FR-32, FR-33, FR-34: Get real-time hazard predictions with truth badges, SHAP factors & uncertainty

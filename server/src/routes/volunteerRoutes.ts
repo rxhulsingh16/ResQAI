@@ -6,12 +6,67 @@ import { logAuditEvent } from '../services/auditService';
 
 export const volunteerRouter = Router();
 
+function formatVolunteerTasks(tasks: any[]) {
+  return tasks.map(t => ({
+    ...t,
+    safetyWarning: t.safety_level === 'UNSAFE_TRAINED_ONLY'
+      ? 'WARNING: Severe hazard zone. Untrained volunteers: DO NOT ENTER. Restricted to certified emergency response teams.'
+      : t.safety_level === 'CAUTION'
+      ? 'CAUTION: Standing water / debris. Protective rubber boots & lifejacket required.'
+      : 'SAFE: Clear access corridor.',
+    isRestricted: t.safety_level === 'UNSAFE_TRAINED_ONLY'
+  }));
+}
+
+// GET /api/v1/volunteer: Community volunteer coordination overview
+volunteerRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const tasks = db.prepare('SELECT * FROM volunteer_tasks ORDER BY priority_score DESC').all() as any[];
+    const volunteerCount = (db.prepare("SELECT count(*) as count FROM users WHERE role = 'VOLUNTEER'").get() as any).count;
+    res.json({
+      success: true,
+      service: 'ResQAI Community Volunteer Operations',
+      registeredVolunteers: volunteerCount,
+      totalTasks: tasks.length,
+      tasks: formatVolunteerTasks(tasks)
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/volunteer/tasks: List open and assigned tasks
+volunteerRouter.get('/tasks', (req: Request, res: Response) => {
+  try {
+    const { status, area_id } = req.query;
+    let query = 'SELECT * FROM volunteer_tasks WHERE 1=1';
+    const params: any[] = [];
+    if (status) {
+      query += ' AND status = ?';
+      params.push(status);
+    }
+    if (area_id) {
+      query += ' AND area_id = ?';
+      params.push(area_id);
+    }
+    query += ' ORDER BY priority_score DESC, created_at DESC';
+    const tasks = db.prepare(query).all(...params) as any[];
+    res.json({
+      success: true,
+      count: tasks.length,
+      tasks: formatVolunteerTasks(tasks)
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/v1/volunteer/board
  * Local help board ranked by priority with safety status and flags (R-VOL-2).
  * High risk/inundated zones flag: "untrained volunteers: do not enter".
  */
-volunteerRouter.get('/board', authenticate, (req: Request, res: Response) => {
+volunteerRouter.get('/board', (req: Request, res: Response) => {
   const { area_id } = req.query;
   let query = 'SELECT * FROM volunteer_tasks WHERE status IN (\'OPEN\', \'ASSIGNED\')';
   const params: any[] = [];

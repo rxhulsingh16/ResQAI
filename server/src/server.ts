@@ -110,6 +110,59 @@ if (webDir) {
   });
 }
 
+// Fallback middleware to handle other APIs like '/', '/about', or undefined endpoints
+app.use((req: Request, res: Response) => {
+  if (req.path === '/' || req.path === '') {
+    return res.json({
+      success: true,
+      service: 'ResQAI Disaster Management API',
+      version: '1.0.0',
+      message: 'Welcome to ResQAI Emergency Coordination & Disaster Management Backend API.',
+      status: 'ONLINE',
+      endpoints: {
+        health: '/api/v1/health',
+        about: '/about',
+        auth: '/api/v1/auth',
+        incidents: '/api/v1/incidents',
+        alerts: '/api/v1/alerts',
+        weather: '/api/v1/weather',
+        sms: '/api/v1/sms'
+      }
+    });
+  }
+
+  if (req.path === '/about') {
+    return res.json({
+      success: true,
+      name: 'ResQAI',
+      version: '1.0.0',
+      description: 'AI-Powered Real-Time Disaster Response and Community Relief Coordination Platform',
+      status: 'ONLINE',
+      architecture: 'Express, TypeScript, SQLite, Socket.IO',
+      features: [
+        'Multi-channel Emergency Triage (SOS, Inbound SMS, IVR Hotline)',
+        'GIS Geospatial Mapping & Polygon Inundation Geofencing',
+        'Dynamic Resource Allocation & Double-Allocation Prevention',
+        'Transparent NGO Donation Tracking & 80G Receipts',
+        'Automated Public Alerts & Situation Reports (SitRep)'
+      ],
+      healthCheck: '/api/v1/health'
+    });
+  }
+
+  return res.status(404).json({
+    success: false,
+    error: 'NOT_FOUND',
+    message: `Cannot ${req.method} ${req.originalUrl}. The requested endpoint is not defined on this server.`,
+    availableEndpoints: {
+      root: '/',
+      about: '/about',
+      health: '/api/v1/health',
+      apiBase: '/api/v1'
+    }
+  });
+});
+
 const PORT = process.env.PORT || 5000;
 
 // Initialize Database & Seed data

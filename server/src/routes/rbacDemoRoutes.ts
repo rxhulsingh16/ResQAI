@@ -4,6 +4,22 @@ import { getAuditLogs } from '../services/auditService';
 
 export const rbacTestRouter = Router();
 
+// GET /api/v1/rbac: RBAC policy and role verification overview
+rbacTestRouter.get('/', (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    service: 'ResQAI Role-Based Access Control (RBAC) System',
+    description: 'Enforces principle of least privilege, strict 2FA on high-privilege roles, and jurisdiction scopes.',
+    demoEndpoints: {
+      citizenOnly: '/api/v1/rbac/citizen-only',
+      adminOnly: '/api/v1/rbac/admin-only',
+      responderTask: '/api/v1/rbac/responder-task',
+      ngoInventory: '/api/v1/rbac/ngo-inventory',
+      jurisdictionEnforcement: '/api/v1/rbac/jurisdiction-data/:regionId'
+    }
+  });
+});
+
 // Endpoint accessible only by CITIZEN or ADMIN
 rbacTestRouter.get('/citizen-only', authenticate, requireRole('CITIZEN'), (req: Request, res: Response) => {
   res.json({ message: 'Welcome Citizen', user: req.user });

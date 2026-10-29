@@ -81,7 +81,7 @@ router.get('/:id/monthly-report', (req: Request, res: Response) => {
     const ngoId = req.params.id;
     const { format = 'json', month = new Date().toISOString().slice(0, 7) } = req.query;
 
-    const ngo = NGOService.getNGOById(ngoId);
+    const ngo = NGOService.getNGOById(ngoId) as any;
     if (!ngo) {
       return res.status(404).json({ success: false, error: 'NGO not found' });
     }

@@ -1,4 +1,4 @@
-import { Router, Request, Response } from 'express';
+import { Router, Request, Response, NextFunction } from 'express';
 import crypto from 'crypto';
 import { db } from '../db/database';
 import { authenticate, requireRole } from '../middleware/rbacMiddleware';
@@ -174,54 +174,81 @@ claimRouter.post('/', authenticate, (req: Request, res: Response) => {
 
 /**
  * GET /api/v1/claims
- * List claims filtered by role and jurisdiction (R-DMG-4 & R-DMG-5).
+ * List claims filtered by role and jurisdiction (R-DMG-4 & R-DMG-5), or return public statistics if unauthenticated.
  */
-claimRouter.get('/', authenticate, (req: Request, res: Response) => {
-  const user = req.user!;
-  let claims: any[] = [];
+claimRouter.get('/', (req: Request, res: Response, next: NextFunction) => {
+  const authHeader = req.headers.authorization;
+  if (authHeader && authHeader.startsWith('Bearer ')) {
+    return authenticate(req, res, () => {
+      const user = req.user!;
+      let claims: any[] = [];
 
-  if (user.role === 'CITIZEN') {
-    // R-DMG-5: Claimant sees their own full record
-    claims = db.prepare('SELECT * FROM damage_claims WHERE claimant_id = ? ORDER BY created_at DESC').all(user.userId);
-  } else if (user.role === 'VOLUNTEER') {
-    // Volunteer sees unverified or assigned claims in their service area
-    claims = db.prepare(`
-      SELECT * FROM damage_claims 
-      WHERE assigned_volunteer_id = ? OR status IN ('SUBMITTED', 'PENDING')
-      ORDER BY is_high_value DESC, created_at DESC
-    `).all(user.userId);
-  } else {
-    // Government Officer / Admin sees all claims with optional area filter
-    const { ward, status, is_high_value } = req.query;
-    let query = 'SELECT * FROM damage_claims WHERE 1=1';
-    const params: any[] = [];
+      if (user.role === 'CITIZEN') {
+        claims = db.prepare('SELECT * FROM damage_claims WHERE claimant_id = ? ORDER BY created_at DESC').all(user.userId);
+      } else if (user.role === 'VOLUNTEER') {
+        claims = db.prepare(`
+          SELECT * FROM damage_claims 
+          WHERE assigned_volunteer_id = ? OR status IN ('SUBMITTED', 'PENDING')
+          ORDER BY is_high_value DESC, created_at DESC
+        `).all(user.userId);
+      } else {
+        const { ward, status, is_high_value } = req.query;
+        let query = 'SELECT * FROM damage_claims WHERE 1=1';
+        const params: any[] = [];
 
-    if (ward) {
-      query += ' AND ward = ?';
-      params.push(ward);
-    }
-    if (status) {
-      query += ' AND status = ?';
-      params.push(status);
-    }
-    if (is_high_value !== undefined) {
-      query += ' AND is_high_value = ?';
-      params.push(is_high_value === 'true' ? 1 : 0);
-    }
-    query += ' ORDER BY created_at DESC';
-    claims = db.prepare(query).all(...params);
+        if (ward) {
+          query += ' AND ward = ?';
+          params.push(ward);
+        }
+        if (status) {
+          query += ' AND status = ?';
+          params.push(status);
+        }
+        if (is_high_value !== undefined) {
+          query += ' AND is_high_value = ?';
+          params.push(is_high_value === 'true' ? 1 : 0);
+        }
+        query += ' ORDER BY created_at DESC';
+        claims = db.prepare(query).all(...params);
+      }
+
+      return res.json({
+        success: true,
+        total: claims.length,
+        claims: claims.map(c => ({
+          ...c,
+          loss_types: JSON.parse(c.loss_types || '[]'),
+          photo_urls: JSON.parse(c.photo_urls || '[]'),
+          video_urls: JSON.parse(c.video_urls || '[]'),
+          documents_json: JSON.parse(c.documents_json || '[]'),
+          evidence_suggestions: JSON.parse(c.evidence_suggestions || '[]')
+        }))
+      });
+    });
   }
 
-  res.json({
-    total: claims.length,
-    claims: claims.map(c => ({
-      ...c,
-      loss_types: JSON.parse(c.loss_types || '[]'),
-      photo_urls: JSON.parse(c.photo_urls || '[]'),
-      video_urls: JSON.parse(c.video_urls || '[]'),
-      documents_json: JSON.parse(c.documents_json || '[]'),
-      evidence_suggestions: JSON.parse(c.evidence_suggestions || '[]')
-    }))
+  // Public overview if no auth token is provided
+  const stats = db.prepare(`
+    SELECT count(*) as total,
+           sum(case when status IN ('COMMUNITY_VERIFIED', 'OFFICIALLY_VERIFIED') then 1 else 0 end) as verified,
+           sum(case when status = 'AID_SANCTIONED' then 1 else 0 end) as sanctioned,
+           sum(case when status = 'DELIVERED' then 1 else 0 end) as delivered,
+           sum(estimated_value) as total_claimed_losses
+    FROM damage_claims
+  `).get() as any;
+
+  return res.json({
+    success: true,
+    service: 'ResQAI Damage Assessment & Relief Sanction Claims Service',
+    requiresAuthForFullDetails: true,
+    message: 'Provide Authorization header (Bearer <token>) to view personal claims.',
+    publicStatistics: {
+      totalClaimsFiled: stats?.total || 0,
+      verifiedClaims: stats?.verified || 0,
+      aidSanctionedCount: stats?.sanctioned || 0,
+      aidDeliveredCount: stats?.delivered || 0,
+      totalClaimedLossInr: stats?.total_claimed_losses || 0
+    }
   });
 });
 

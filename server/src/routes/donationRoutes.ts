@@ -3,6 +3,29 @@ import { PaymentService } from '../services/paymentService';
 
 const router = Router();
 
+// GET /api/v1/donations: Public donations and verified receipts overview
+router.get('/', (req: Request, res: Response) => {
+  try {
+    const { campaign_id } = req.query;
+    let query = "SELECT id, campaign_id, donor_name, amount_paise, currency, status, is_fcra_contribution, tax_80g_issued, created_at FROM donations WHERE status = 'PAID'";
+    const params: any[] = [];
+    if (campaign_id) {
+      query += " AND campaign_id = ?";
+      params.push(campaign_id);
+    }
+    query += " ORDER BY created_at DESC LIMIT 50";
+    const donations = require('../db/database').db.prepare(query).all(...params);
+    res.json({
+      success: true,
+      service: 'ResQAI Donation Gateway & 80G Receipt Service',
+      totalDonations: donations.length,
+      donations
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // POST /api/v1/donations/create-order — Initiate Razorpay Order (FR-44, FR-46, FR-47)
 router.post('/create-order', (req: Request, res: Response) => {
   try {

@@ -3,6 +3,25 @@ import { EvacuationService } from '../services/evacuationService';
 
 export const evacuationRouter = Router();
 
+// GET /api/v1/evacuation: Evacuation zones and assisted pickup operations
+evacuationRouter.get('/', (_req: Request, res: Response) => {
+  try {
+    const zones = EvacuationService.getAllZones();
+    res.json({
+      success: true,
+      service: 'ResQAI Emergency Evacuation & Corridor Directives',
+      totalZones: zones.length,
+      zones,
+      endpoints: {
+        zones: '/api/v1/evacuation/zones',
+        assistedPickups: '/api/v1/evacuation/assisted-pickups'
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // GET /api/v1/evacuation/zones - List evacuation zones
 evacuationRouter.get('/zones', (_req: Request, res: Response) => {
   try {

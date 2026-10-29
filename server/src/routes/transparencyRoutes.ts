@@ -6,6 +6,56 @@ import { logAuditEvent } from '../services/auditService';
 
 export const transparencyRouter = Router();
 
+// GET /api/v1/transparency: Public disaster response ledger and fund transparency
+transparencyRouter.get('/', (req: Request, res: Response) => {
+  try {
+    const campaigns = db.prepare('SELECT count(*) as c, sum(received_amount_paise) as r, sum(spent_amount_paise) as s FROM campaigns').get() as any;
+    const ngos = db.prepare("SELECT count(*) as c FROM ngos WHERE kyc_status = 'APPROVED'").get() as any;
+    const donations = db.prepare("SELECT count(*) as c, sum(amount_paise) as total FROM donations WHERE status = 'PAID'").get() as any;
+
+    res.json({
+      success: true,
+      service: 'ResQAI Public Transparency & Audit Ledger',
+      financials: {
+        totalReceivedInr: (campaigns?.r || 0) / 100,
+        totalSpentInr: (campaigns?.s || 0) / 100,
+        unspentInr: ((campaigns?.r || 0) - (campaigns?.s || 0)) / 100,
+        verifiedNgosCount: ngos?.c || 0,
+        totalDonationsCount: donations?.c || 0
+      },
+      endpoints: {
+        search: '/api/v1/transparency/search',
+        summary: '/api/v1/transparency/summary',
+        export: '/api/v1/transparency/export'
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
+// GET /api/v1/transparency/summary: Detailed financial breakdown
+transparencyRouter.get('/summary', (req: Request, res: Response) => {
+  try {
+    const campaigns = db.prepare('SELECT count(*) as c, sum(received_amount_paise) as r, sum(spent_amount_paise) as s FROM campaigns').get() as any;
+    const ngos = db.prepare("SELECT count(*) as c FROM ngos WHERE kyc_status = 'APPROVED'").get() as any;
+    const donations = db.prepare("SELECT count(*) as c, sum(amount_paise) as total FROM donations WHERE status = 'PAID'").get() as any;
+
+    res.json({
+      success: true,
+      data: {
+        totalReceivedInr: (campaigns?.r || 0) / 100,
+        totalSpentInr: (campaigns?.s || 0) / 100,
+        netBalanceInr: ((campaigns?.r || 0) - (campaigns?.s || 0)) / 100,
+        verifiedNGOs: ngos?.c || 0,
+        completedDonations: donations?.c || 0
+      }
+    });
+  } catch (error: any) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 /**
  * GET /api/v1/transparency/search
  * Universal search across NGOs, Volunteers, Government, Disasters, Areas, and Claim IDs (R-TRN-1).
